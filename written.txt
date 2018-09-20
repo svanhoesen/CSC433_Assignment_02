@@ -1,0 +1,34 @@
+
+
+1) What is a pixel? How big is a pixel? Both of these questions have multiple answers, briefly explain yours.
+
+
+
+2) 3 × 3 convolution kernels can create a variety of effects. Consider the following three kernels. Briefly describe 
+   the output image that is produced as a result of convolution with each kernel (you may assume each are scaled
+   as necessary):
+
+    a. [[0  1  0]
+		[0  0  0]
+		[0  0  0]]
+
+    b. [[1  2  1]
+		[1  2  1]
+		[1  2  1]]
+	
+    c. [[0  -1  0]
+		[-1  4 -1]
+		[0  -1  0]]
+	
+3) Given an image I of 200x50, and a kernel K of size 5x5, how many multiplications are required to compute K*I? Be sure to state your
+   boundary condition.
+
+
+
+4) Draw and label a diagram of the HSV color space. Include a brief description of each variable, its role in the final
+   color, and a possible numeric range.
+
+
+
+5) In rescaling images, individually adjusting only gain or bias typically is not sufficient to improve the image. Explain
+   why we need both. In particular, discuss the resulting effects on the image when adjusting gain vs. bias.
