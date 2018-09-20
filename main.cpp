@@ -2,7 +2,7 @@
 /// \file main.cpp
 /// \brief SDL Demo Code
 /// \author Joshua A. Levine <josh@email.arizona.edu>
-/// \co-author Steffan Van Hoesen
+/// \co-author Steffan Van Hoesen <svanhoesen@email.arizona.edu>
 /// \date 01/15/18
 ///
 /// This code provides an introductory demonstration of SDL.  When run, a
@@ -90,11 +90,9 @@ class ppm {
 
 	unsigned char* getData();
 
-	void reload();
-
 	void rescaler(float gain, float bias, float gamma);
 
-	resizer(ppm &pixmap, ppm &scalemap, int w, int h, int NC, int NR);
+	void resizer(int w, int h, int NC, int NR);
 };
 
 ///This will initialize a PPM object to default values
@@ -115,7 +113,7 @@ ppm::ppm() {
 ///
 ppm::ppm(const std::string &fileName) {
 	init();
-	read(fileName);
+	load(fileName);
 }
 
 ///This will create an "epmty" PPM image with a given width and height; 
@@ -136,7 +134,7 @@ ppm::ppm(const unsigned int _width, const unsigned int _height) {
 	r.resize(size);
 	g.resize(size);
 	b.resize(size);
-	data.resize(size * 3);
+	data = new unsigned char[(size * 3)];
 }
 
 ///This will load the PPM image from the PPM file referenced as fileName
@@ -189,23 +187,23 @@ void ppm::load(const std::string &fileName) {
 		char channel;
 		//read and store color values from the input to the r, g, and b vectors arrays
 		///TODO: load directly into unsigned char data
+		int loc = 0;
+		data = new unsigned char[(size * 3)];
 		for (unsigned int i = 0; i < size; ++i) {
 			input.read(&channel, 1);
 			r[i] = (unsigned char)channel;
+			data[loc] = (unsigned char)channel;
+			loc++;
 			input.read(&channel, 1);
 			g[i] = (unsigned char)channel;
+			data[loc] = (unsigned char)channel;
+			loc++;
 			input.read(&channel, 1);
 			b[i] = (unsigned char)channel;
+			data[loc] = (unsigned char)channel;
+			loc++;
 		}
-		data.resize(size*3);
-		for (int r = 0; r < n_r; r++) {
-			for (int c = 0; c < n_c; c++) {
-				data[3 * (r*n_c + c) + 0] = r[r*n_c + c];
-				data[3 * (r*n_c + c) + 1] = g[r*n_c + c];
-				data[3 * (r*n_c + c) + 2] = b[r*n_c + c];
-			}
-		}
-		pixmap.data = data;
+		
 	}
 	else {
 		std::cout << "Error. Unable to open " << fileName << std::endl;
@@ -245,25 +243,11 @@ unsigned char* ppm::getData() {
 	return data;
 }
 
-void ppm::reload(){
-	int num_cols = width;
-	int num_rows = height;
-
-	//r is row, c is column
-	for (int r = 0; r < num_rows; r++) {
-		for (int c = 0; c < num_cols; c++) {
-			data[3 * (r*num_cols + c) + 0] = r[r*num_cols + c];
-			data[3 * (r*num_cols + c) + 1] = g[r*num_cols + c];
-			data[3 * (r*num_cols + c) + 2] = b[r*num_cols + c];
-		}
-	}
-}
-
 void ppm::rescaler(float gain, float bias, float gamma) {
 	int num_cols = width;
 	int num_rows = height;
 	int size = num_cols * num_rows;
-	float newLum = 0.0;
+	float newLum;
 	float luma;
 	
 	//potentially use a color class with an array 
@@ -273,13 +257,13 @@ void ppm::rescaler(float gain, float bias, float gamma) {
 			float green = (float)data[3 * (r*num_cols + c) + 1]/255.0;
 			float blue = (float)data[3 * (r*num_cols + c) + 2]/255.0;
 			
-			newLum = ((1.0 / 61.0) (20.0*red + 40.0*green + blue));
+			newLum = ((1.0 / 61.0) * (20.0*red + 40.0*green + blue));
 			luma = pow(gain * newLum + bias, gamma);
-			scale = luma / newLum;
-			
-			float wRed = std::clamp(red * scale, 0, 1);
-			float wGreen = std::clamp(green * scale, 0, 1);
-			float wBlue = std::clamp(blue * scale, 0, 1);
+			float scale = luma / newLum;
+		///TODO:pair min and max finctions instead of clamp fmax = 0, fmin = 1	
+			float wRed = std::clamp((red * scale), 0, 1);
+			float wGreen = std::clamp((green * scale), 0, 1);
+			float wBlue = std::clamp((blue * scale), 0, 1);
 
 			data[3 * (r*num_cols + c) + 0] = (unsigned char)wRed * 255;
 			data[3 * (r*num_cols + c) + 1] = (unsigned char)wGreen * 255;
@@ -290,22 +274,22 @@ void ppm::rescaler(float gain, float bias, float gamma) {
 }
 
 
-ppm::resizer(ppm &pixmap, ppm &scalemap, int w, int h, int NC, int NR) {
+void ppm::resizer(int w, int h, int NC, int NR) {	
 
 	float ratio_C = float(NC) / w;
 	float ratio_R = float(NR) / h;
 	float x, y;
+	int size = NC * NR;
+	unsigned char* temp[(3*size)];
 	
 	//r is row, c is column
-	for (int r = 0; r < num_rows; r++) {
-		for (int c = 0; c < num_cols; c++) {
+	for (int r = 0; r < NR; r++) {
+		for (int c = 0; c < NC; c++) {
 			x = floor(c*ratio_C);
 			y = floor(r*ratio_R);
-			scalemap.data[(r*NC) + c] = pixmap.data[(int)((y*w) + x)];
+			data[(int)(r*NC) + c] = data[(int)((y*w) + x)];
 		}
 	}
-	return scalemap;
-
 }
 
 /// 
@@ -356,18 +340,15 @@ void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int x, int y) {
 int main(int argc, char** argv) {
 	//Integers specifying the width (number of columns) and height (number
 	//of rows) of the image
-	const int NC = argv[1];
-	const int NR = argv[2];
+	const int NC = *argv[1];
+	const int NR = *argv[2];
 	const char* fileName = argv[3];
-	const char* fN = argv[4];
-	ppm pixmap.load(fileName);
+	const char* outFileName = argv[4];
+	ppm pixmap(fileName);
 	
 	int num_cols = pixmap.width;
 	int num_rows = pixmap.height;
 	unsigned char* data = pixmap.getData();
-
-	ppm scaleMap(NC, NR);
-	resizer(pixmap, scalemap, num_cols, num_rows, NC, NR);
 
 	float gain = 1;
 	float bias = 0;
@@ -399,7 +380,6 @@ int main(int argc, char** argv) {
 	//pixel, one per color channel
 	background = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STATIC, num_cols, num_rows);
 	//Copy the raw data array into the texture.
-	unsigned char* data = pixmap.getData();
 	SDL_UpdateTexture(background, NULL, data, 3 * num_cols);
 	if (background == NULL) {
 		logSDLError(std::cout, "CreateTextureFromSurface");
@@ -447,60 +427,57 @@ int main(int argc, char** argv) {
 					quit = true;
 					break;
 				case SDLK_s:
-					pixmap.save(fn);
+					pixmap.save(outFileName);
 					break;
 				case SDLK_1:
 					// rescale up gain
 					gain += .05;
-					cout << gain << "\n
+					cout << gain << "\n";
 					pixmap.rescaler(gain, bias, gamma);
 					//SDL_RenderSetScale(renderer, 2);
 					break;
 				case SDLK_2:
 					// rescale down gain
 					gain -= .05;
-					cout << gain << "\n
+					cout << gain << "\n";
 					pixmap.rescaler(gain, bias, gamma);
 					//SDL_RenderSetScale(renderer, .5);
-					break:
+					break;
 				case SDLK_3:
 					// rescale up bias
 					bias += .05;
-					cout << bias << "\n
+					cout << bias << "\n";
 					pixmap.rescaler(gain, bias, gamma);
 					//SDL_RenderSetScale(renderer, 2);
 					break;
 				case SDLK_4:
 					//rescale down bias
 					bias -= .05;
-					cout << bias << "\n
+					cout << bias << "\n";
 					pixmap.rescaler(gain, bias, gamma);
-					//SDL_RenderSetScale(renderer, .5);
-					break :
+					break ;
 				case SDLK_5:
 					// rescale up gamma
 					gamma += .05;
-					cout << gamma << "\n
+					cout << gamma << "\n";
 					pixmap.rescaler(gain, bias, gamma);
-					//SDL_RenderSetScale(renderer, 2);
 					break;
 				case SDLK_6:
 					// rescale down gamma
 					gamma -= .05;
-					cout << gamma << "\n
+					cout << gamma << "\n";
 					pixmap.rescaler(gain, bias, gamma);
-					//SDL_RenderSetScale(renderer, .5);
-					break :
-				case SDLK_r:
-					flag = true;
-					pixmap.resizer(NC, NR);
+					break;
+				case SDLK_7:
+					pixmap.resizer(num_cols, num_rows, NC, NR);
 					SDL_SetWindowSize(window, NC, NR);
 					SDL_Texture *newBackground;
 					newBackground = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STATIC, NC, NR);
-					background = *newBackground;
-					
-					
-					break :
+					background = newBackground;
+					break;
+//				case SDLK_r:
+//					ppixmap.load(fileName);
+//					break;
 				default:
 					break;
 				}
@@ -530,12 +507,7 @@ int main(int argc, char** argv) {
 		
 		//Update the texture, assuming data has changed.
 		///TODO: change data field ie. pixmap.getdata
-		if (flag == true) {
-			*data = scalemap.getData();
-		}
-		else {
-			*data = pixmap.getData();
-		}
+		data = pixmap.getData();
 		SDL_UpdateTexture(background, NULL, data, 3 * num_cols);
 		//display the texture on the screen
 		renderTexture(background, renderer, 0, 0);
