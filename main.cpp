@@ -261,9 +261,15 @@ void ppm::rescaler(float gain, float bias, float gamma) {
 			luma = pow(gain * newLum + bias, gamma);
 			float scale = luma / newLum;
 		///TODO:pair min and max finctions instead of clamp fmax = 0, fmin = 1	
-			float wRed = std::clamp((red * scale), 0, 1);
-			float wGreen = std::clamp((green * scale), 0, 1);
-			float wBlue = std::clamp((blue * scale), 0, 1);
+			float wRed = (red * scale);
+			wRed = std::fmax(wRed, 0.0);
+			wRed = std::fmin(wRed, 1.0);
+			float wGreen = (green * scale);
+			wGreen = std::fmax(wGreen, 0.0);
+			wGreen = std::fmin(wGreen, 1.0);
+			float wBlue = (blue * scale);
+			wBlue = std::fmax(wBlue, 0.0);
+			wBlue = std::fmin(wBlue, 1.0);
 
 			data[3 * (r*num_cols + c) + 0] = (unsigned char)wRed * 255;
 			data[3 * (r*num_cols + c) + 1] = (unsigned char)wGreen * 255;
