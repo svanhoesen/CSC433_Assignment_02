@@ -186,7 +186,6 @@ void ppm::load(const std::string &fileName) {
 		b.reserve(size); //resize the b vector
 		char channel;
 		//read and store color values from the input to the r, g, and b vectors arrays
-		///TODO: load directly into unsigned char data
 		int loc = 0;
 		data = new unsigned char[(size * 3)];
 		for (unsigned int i = 0; i < size; ++i) {
@@ -216,12 +215,12 @@ void ppm::load(const std::string &fileName) {
 /// \param fileName the referenced PPM file
 ///
 
-void ppm::save(const std::string &fileName) {
-	std::ofstream input(fileName.c_str(), std::ios::out | std::ios::binary);
+void ppm::save(const std::string &outFileName) {
+	std::ofstream input(outFileName.c_str(), std::ios::out | std::ios::binary);
 	if (input.is_open()) {
 
 		input << "P6\n";
-		input << "# " << fileName << "\n";
+		input << "# " << outFileName << "\n";
 		input << width;
 		input << " ";
 		input << height << "\n";
@@ -234,7 +233,7 @@ void ppm::save(const std::string &fileName) {
 		}
 	}
 	else {
-		std::cout << "Error. Unable to open " << fileName << std::endl;
+		std::cout << "Error. Unable to open " << outFileName << std::endl;
 	}
 	input.close();
 }
@@ -260,16 +259,27 @@ void ppm::rescaler(float gain, float bias, float gamma) {
 			newLum = ((1.0 / 61.0) * (20.0*red + 40.0*green + blue));
 			luma = pow(gain * newLum + bias, gamma);
 			float scale = luma / newLum;
-		///TODO:pair min and max finctions instead of clamp fmax = 0, fmin = 1	
 			float wRed = (red * scale);
-			wRed = std::fmax(wRed, 0.0);
-			wRed = std::fmin(wRed, 1.0);
+			if(std::fmax(wRed, 0.0)){
+				wRed = std::fmax(wRed, 0.0);
+			}
+			else if(std::fmin(wRed, 1.0)){
+				wRed = std::fmin(wRed, 1.0);
+			}
 			float wGreen = (green * scale);
-			wGreen = std::fmax(wGreen, 0.0);
-			wGreen = std::fmin(wGreen, 1.0);
+			if(std::fmax(wGreen, 0.0)){
+				wGreen = std::fmax(wGreen, 0.0);
+			}	
+			else if(std::fmin(wGreen, 1.0)){
+				wGreen = std::fmin(wGreen, 1.0);
+			}
 			float wBlue = (blue * scale);
-			wBlue = std::fmax(wBlue, 0.0);
-			wBlue = std::fmin(wBlue, 1.0);
+			if(std::fmax(wBlue, 0.0)){
+				wBlue = std::fmax(wBlue, 0.0);
+			}
+			else if(std::fmin(wBlue, 1.0)){
+				wBlue = std::fmin(wBlue, 1.0);
+			}
 
 			data[3 * (r*num_cols + c) + 0] = (unsigned char)wRed * 255;
 			data[3 * (r*num_cols + c) + 1] = (unsigned char)wGreen * 255;
@@ -356,9 +366,9 @@ int main(int argc, char** argv) {
 	int num_rows = pixmap.height;
 	unsigned char* data = pixmap.getData();
 
-	float gain = 1;
-	float bias = 0;
-	float gamma = 0;
+	float gain = 1.0;
+	float bias = 0.0;
+	float gamma = 0.0;
 	//Start up SDL and make sure it went ok
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
 		logSDLError(std::cout, "SDL_Init");
@@ -439,42 +449,34 @@ int main(int argc, char** argv) {
 					// rescale up gain
 					gain += .05;
 					cout << gain << "\n";
-					pixmap.rescaler(gain, bias, gamma);
-					//SDL_RenderSetScale(renderer, 2);
 					break;
 				case SDLK_2:
 					// rescale down gain
 					gain -= .05;
 					cout << gain << "\n";
-					pixmap.rescaler(gain, bias, gamma);
-					//SDL_RenderSetScale(renderer, .5);
 					break;
 				case SDLK_3:
 					// rescale up bias
 					bias += .05;
 					cout << bias << "\n";
-					pixmap.rescaler(gain, bias, gamma);
-					//SDL_RenderSetScale(renderer, 2);
 					break;
 				case SDLK_4:
 					//rescale down bias
 					bias -= .05;
 					cout << bias << "\n";
-					pixmap.rescaler(gain, bias, gamma);
 					break ;
 				case SDLK_5:
 					// rescale up gamma
 					gamma += .05;
 					cout << gamma << "\n";
-					pixmap.rescaler(gain, bias, gamma);
 					break;
 				case SDLK_6:
 					// rescale down gamma
 					gamma -= .05;
 					cout << gamma << "\n";
-					pixmap.rescaler(gain, bias, gamma);
 					break;
 				case SDLK_7:
+					//resize the immage
 					pixmap.resizer(num_cols, num_rows, NC, NR);
 					SDL_SetWindowSize(window, NC, NR);
 					SDL_Texture *newBackground;
@@ -482,7 +484,7 @@ int main(int argc, char** argv) {
 					background = newBackground;
 					break;
 //				case SDLK_r:
-//					ppixmap.load(fileName);
+//					ppixmap(fileName);
 //					break;
 				default:
 					break;
@@ -509,10 +511,10 @@ int main(int argc, char** argv) {
 					pixmap.data[3 * (mouseY*num_cols + mouseX) + 2] = 0;
 				}
 			}
+			pixmap.rescaler(gain, bias, gamma);
 		}
 		
 		//Update the texture, assuming data has changed.
-		///TODO: change data field ie. pixmap.getdata
 		data = pixmap.getData();
 		SDL_UpdateTexture(background, NULL, data, 3 * num_cols);
 		//display the texture on the screen
