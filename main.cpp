@@ -291,21 +291,21 @@ void ppm::rescaler(float gain, float bias, float gamma) {
 
 
 void ppm::resizer(int w, int h, int NC, int NR) {	
-
+	ppm temp(NC, NR);
 	float ratio_C = float(NC) / w;
 	float ratio_R = float(NR) / h;
 	float x, y;
 	int size = NC * NR;
-	unsigned char* temp[(3*size)];
 	
 	//r is row, c is column
 	for (int r = 0; r < NR; r++) {
 		for (int c = 0; c < NC; c++) {
 			x = floor(c*ratio_C);
 			y = floor(r*ratio_R);
-			data[(int)(r*NC) + c] = data[(int)((y*w) + x)];
+			temp.data[(int)(r*NC) + c] = data[(int)((y*w) + x)];
 		}
 	}
+	data = temp.data;
 }
 
 /// 
@@ -356,8 +356,8 @@ void renderTexture(SDL_Texture *tex, SDL_Renderer *ren, int x, int y) {
 int main(int argc, char** argv) {
 	//Integers specifying the width (number of columns) and height (number
 	//of rows) of the image
-	const int NC = *argv[1];
-	const int NR = *argv[2];
+	const int NC = atoi(argv[1]);
+	const int NR = atoi(argv[2]);
 	const char* fileName = argv[3];
 	const char* outFileName = argv[4];
 	ppm pixmap(fileName);
