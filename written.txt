@@ -1,7 +1,7 @@
 
 
 1) What is a pixel? How big is a pixel? Both of these questions have multiple answers, briefly explain yours.
-
+A pixel is a physical point of an image represented on a screen. The size of a pixel depends on the resolution of the screen.
 
 
 2) 3 × 3 convolution kernels can create a variety of effects. Consider the following three kernels. Briefly describe 
@@ -9,26 +9,34 @@
    as necessary):
 
     a. [[0  1  0]
-		[0  0  0]
-		[0  0  0]]
+	[0  0  0]
+	[0  0  0]]
+	This would have a sharpening effect on an image
 
     b. [[1  2  1]
-		[1  2  1]
-		[1  2  1]]
-	
+	[1  2  1]
+	[1  2  1]]
+	This would have a horizontal bluring effect on the image
+
     c. [[0  -1  0]
-		[-1  4 -1]
-		[0  -1  0]]
-	
-3) Given an image I of 200x50, and a kernel K of size 5x5, how many multiplications are required to compute K*I? Be sure to state your
-   boundary condition.
+	[-1  4 -1]
+	[0  -1  0]]
+	This would have a separable box smoothing effect on the image	
+
+3) Given an image I of 200x50, and a kernel K of size 5x5, how many multiplications are required to compute K*I? Be sure to state your boundary condition.
 
 
 
-4) Draw and label a diagram of the HSV color space. Include a brief description of each variable, its role in the final
-   color, and a possible numeric range.
+4) Draw and label a diagram of the HSV color space. Include a brief description of each variable, its role in the final color, and a possible numeric range.
+			__ __
+		       /  H  \
+		      /	      \
+		     /   /|\   \
+		    ( 	/ | S   )
+		     \_/_ _ _\_/
+		      \   |   /	
+		       \  V  /
+			\ | /
+			 \|/
 
-
-
-5) In rescaling images, individually adjusting only gain or bias typically is not sufficient to improve the image. Explain
-   why we need both. In particular, discuss the resulting effects on the image when adjusting gain vs. bias.
+5) In rescaling images, individually adjusting only gain or bias typically is not sufficient to improve the image. Explain why we need both. In particular, discuss the resulting effects on the image when adjusting gain vs. bias.
